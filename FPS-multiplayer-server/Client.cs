@@ -12,6 +12,12 @@ namespace FPS_multiplayer_server
         public int id;
         public TCP tcp;
 
+        public Client(int _clientId)
+        {
+            id = _clientId;
+            tcp = new TCP(id);
+        }
+
         public class TCP
         {
             public TcpClient socket;
