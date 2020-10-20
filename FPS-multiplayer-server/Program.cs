@@ -7,6 +7,9 @@ namespace FPS_multiplayer_server
         static void Main(string[] args)
         {
             Console.Title = "Game Server";
+
+            Server.Start(50, 26950);
+
             Console.ReadKey();
         }
     }
