@@ -24,6 +24,7 @@ namespace FPS_multiplayer_server
 
             private readonly int id;
             private NetworkStream stream;
+            private Packet receivedData;
             private byte[] receiveBuffer;
             public TCP(int _id)
             {
@@ -38,6 +39,7 @@ namespace FPS_multiplayer_server
 
                 stream = socket.GetStream();
 
+                receivedData = new Packet();
                 receiveBuffer = new byte[dataBufferSize];
 
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
@@ -74,7 +76,7 @@ namespace FPS_multiplayer_server
                     byte[] _data = new byte[_byteLength];
                     Array.Copy(receiveBuffer, _data, _byteLength);
 
-                    //TODO: Handle data
+                    receivedData.Reset(HandleData(_data));
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
                 catch (Exception _ex)
@@ -82,6 +84,49 @@ namespace FPS_multiplayer_server
                     Console.WriteLine($"Error receiving TCP data: {_ex}");
                     //TODO: Disconnect.
                 }
+            }
+            private bool HandleData(byte[] _data)
+            {
+                int _packetLenght = 0;
+                receivedData.SetBytes(_data);
+
+                if (receivedData.UnreadLength() >= 4)
+                {
+                    _packetLenght = receivedData.ReadInt();
+                    if (_packetLenght <= 0)
+                    {
+                        return true;
+                    }
+                }
+
+                while (_packetLenght > 0 && _packetLenght <= receivedData.UnreadLength())
+                {
+                    byte[] _packetBytes = receivedData.ReadBytes(_packetLenght);
+                    ThreadManager.ExecuteOnMainThread(() =>
+                    {
+                        using (Packet _packet = new Packet(_packetBytes))
+                        {
+                            int _packetId = _packet.ReadInt();
+                            Server.packetHandlers[_packetId](id, _packet);
+                        }
+                    });
+
+                    _packetLenght = 0;
+                    if (receivedData.UnreadLength() >= 4)
+                    {
+                        _packetLenght = receivedData.ReadInt();
+                        if (_packetLenght <= 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                if (_packetLenght <= 1)
+                {
+                    return true;
+                }
+                return false;
             }
         }
     }
