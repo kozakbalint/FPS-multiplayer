@@ -11,7 +11,7 @@ namespace FPS_multiplayer_server
         welcome = 1,
         spawnPlayer,
         playerPosition,
-        olayerRotation
+        playerRotation
     }
 
     /// <summary>Sent from client to server.</summary>
