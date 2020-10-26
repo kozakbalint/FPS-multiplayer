@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 
 namespace FPS_multiplayer_server
@@ -8,14 +9,16 @@ namespace FPS_multiplayer_server
     public enum ServerPackets
     {
         welcome = 1,
-        udpTest
+        spawnPlayer,
+        playerPosition,
+        olayerRotation
     }
 
     /// <summary>Sent from client to server.</summary>
     public enum ClientPackets
     {
         welcomeReceived = 1,
-        udpTestReceived
+        playerMovement
     }
 
     public class Packet : IDisposable
@@ -158,6 +161,23 @@ namespace FPS_multiplayer_server
         {
             Write(_value.Length); // Add the length of the string to the packet
             buffer.AddRange(Encoding.ASCII.GetBytes(_value)); // Add the string itself
+        }
+        /// <summary>Adds a Vector3 to the packet.</summary>
+        /// <param name="_value">The Vector3 to add.</param>
+        public void Write(Vector3 _value)
+        {
+            Write(_value.X);
+            Write(_value.Y);
+            Write(_value.Z);
+        }
+        /// <summary>Adds a Quaternion to the packet.</summary>
+        /// <param name="_value">The Quaternion to add.</param>
+        public void Write(Quaternion _value)
+        {
+            Write(_value.X);
+            Write(_value.Y);
+            Write(_value.Z);
+            Write(_value.W);
         }
         #endregion
 

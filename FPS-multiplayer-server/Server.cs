@@ -118,7 +118,6 @@ namespace FPS_multiplayer_server
             packetHandlers = new Dictionary<int, PacketHandler>()
             {
                 { (int)ClientPackets.welcomeReceived, ServerHandle.WelcomeReceived },
-                { (int)ClientPackets.udpTestReceived, ServerHandle.UDPTestReceived }
             };
             Console.WriteLine("Initialize packets.");
         }
