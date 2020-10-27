@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Net;
 using System.Net.Sockets;
+using System;
 
 public class Client : MonoBehaviour
 {
@@ -38,7 +38,7 @@ public class Client : MonoBehaviour
         udp = new UDP();
     }
 
-    public void ConnecToServer()
+    public void ConnectToServer()
     {
         InitializeClientData();
 
@@ -103,7 +103,7 @@ public class Client : MonoBehaviour
                 int _byteLength = stream.EndRead(_result);
                 if (_byteLength <= 0)
                 {
-                    //TODO: Disconnect.
+                    // TODO: disconnect
                     return;
                 }
 
@@ -113,54 +113,55 @@ public class Client : MonoBehaviour
                 receivedData.Reset(HandleData(_data));
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
             }
-            catch (Exception _ex)
+            catch
             {
-                Console.WriteLine($"Error receiving TCP data: {_ex}");
-                //TODO: Disconnect.
+                // TODO: disconnect
             }
         }
 
         private bool HandleData(byte[] _data)
         {
-            int _packetLenght = 0;
+            int _packetLength = 0;
+
             receivedData.SetBytes(_data);
 
             if (receivedData.UnreadLength() >= 4)
             {
-                _packetLenght = receivedData.ReadInt();
-                if (_packetLenght <= 0)
+                _packetLength = receivedData.ReadInt();
+                if (_packetLength <= 0)
                 {
                     return true;
                 }
             }
 
-            while (_packetLenght > 0 && _packetLenght <= receivedData.UnreadLength())
+            while (_packetLength > 0 && _packetLength <= receivedData.UnreadLength())
             {
-                byte[] _packetBytes = receivedData.ReadBytes(_packetLenght);
-                ThreadManager.ExecuteOnMainThread( () =>
-                 {
-                     using (Packet _packet = new Packet(_packetBytes))
-                     {
-                         int _packetId = _packet.ReadInt();
-                         packetHandlers[_packetId](_packet);
-                     }
-                 });
+                byte[] _packetBytes = receivedData.ReadBytes(_packetLength);
+                ThreadManager.ExecuteOnMainThread(() =>
+                {
+                    using (Packet _packet = new Packet(_packetBytes))
+                    {
+                        int _packetId = _packet.ReadInt();
+                        packetHandlers[_packetId](_packet);
+                    }
+                });
 
-                _packetLenght = 0;
+                _packetLength = 0;
                 if (receivedData.UnreadLength() >= 4)
                 {
-                    _packetLenght = receivedData.ReadInt();
-                    if (_packetLenght <= 0)
+                    _packetLength = receivedData.ReadInt();
+                    if (_packetLength <= 0)
                     {
                         return true;
                     }
                 }
             }
 
-            if (_packetLenght <= 1)
+            if (_packetLength <= 1)
             {
                 return true;
             }
+
             return false;
         }
     }
@@ -213,7 +214,7 @@ public class Client : MonoBehaviour
 
                 if (_data.Length < 4)
                 {
-                    //TODO: Disconnect
+                    // TODO: disconnect
                     return;
                 }
 
@@ -221,7 +222,7 @@ public class Client : MonoBehaviour
             }
             catch
             {
-                //TODO: Disconnect
+                // TODO: disconnect
             }
         }
 
@@ -248,8 +249,10 @@ public class Client : MonoBehaviour
     {
         packetHandlers = new Dictionary<int, PacketHandler>()
         {
-            {(int)ServerPackets.welcome, ClientHandle.Welcome },
-            {(int)ServerPackets.spawnPlayer, ClientHandle.SpawnPlayer }
+            { (int)ServerPackets.welcome, ClientHandle.Welcome },
+            { (int)ServerPackets.spawnPlayer, ClientHandle.SpawnPlayer },
+            { (int)ServerPackets.playerPosition, ClientHandle.PlayerPosition },
+            { (int)ServerPackets.playerRotation, ClientHandle.PlayerRotation },
         };
         Debug.Log("Initialized packets.");
     }
